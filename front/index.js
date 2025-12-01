@@ -35,7 +35,7 @@ function criarCard(m) {
     card.innerHTML = `
         <h3>${m.nome} (${m.estado})</h3>
         <p>${m.caracteristica}</p>
-        <button class="btn-delete" onclick="deletarMunicipio(${m.id})">Deletar</button>
+        <button class="btn-delete" onclick="deletar()">Deletar</button>
     `;
 
     listagem.appendChild(card);
@@ -69,3 +69,6 @@ async function inserirMunicipio() {
     }
 }
 
+async function deletar(){
+    alert("vou deletar");
+}
