@@ -1,4 +1,7 @@
 const API = "http://127.0.0.1:3000/municipios";
+let limit = 3;
+let offset = 0;
+let lastScrollTop = 0;
 
 const listagem = document.getElementById("listagem");
 const btnCarregar = document.getElementById("btn");
@@ -6,22 +9,55 @@ const btnSalvar = document.getElementById("btnSalvar");
 const btnAlterar = document.getElementById("btn-alterar");
 const alterar = document.getElementById("lista-alterar");
 const fechar = document.getElementById("fechar-janela");
-
+const btnMaisMunicipios = document.getElementById("maisMunicipios");
+const btnMenosMunicipios = document.getElementById("menosMunicipios");
 alterar.style.display = "none";
 // Eventos
 btnCarregar.addEventListener("click", carregarMunicipios);
 btnSalvar.addEventListener("click", inserirMunicipio);
 btnAlterar.addEventListener("click", salvarMudanca);
-fechar.addEventListener("click", () => {
-    alterar.style.display = "none"
-    listagem.style.pointerEvents = "auto";
+
+window.addEventListener("scroll", async () => {
+  let scrollTop = window.pageYOffset;
+
+  if (scrollTop > lastScrollTop) {
+    // Rolou PARA BAIXO
+    offset += 3;
+    carregarMunicipiosMenosMais(offset);
+    console.log(offset);
+  } else {
+    // Rolou PARA CIMA
+    offset -= 3;
+    if (offset < 0) offset = 0; // impede negativo
+    carregarMunicipiosMenosMais(offset);
+    console.log(offset);
+  }
+  lastScrollTop = scrollTop;
 });
+fechar.addEventListener("click", () => {
+  alterar.style.display = "none";
+  listagem.style.pointerEvents = "auto";
+});
+
+async function carregarMunicipiosMenosMais(offset) {
+  try {
+    const resposta = await fetch(`${API}/?limit=${limit}&offset=${offset}`);
+    const dados = await resposta.json();
+
+    listagem.innerHTML = ""; // limpa
+
+    dados.forEach((m) => criarCard(m));
+  } catch (erro) {
+    console.error("Erro ao carregar:", erro.message);
+  }
+}
+
 //--------------------------------------------------
 // LISTAR MUNICÍPIOS
 //--------------------------------------------------
 async function carregarMunicipios() {
   try {
-    const resposta = await fetch(API);
+    const resposta = await fetch(`${API}/?limit=${limit}`);
     const dados = await resposta.json();
 
     listagem.innerHTML = ""; // limpa
@@ -97,11 +133,10 @@ async function alterarJanela(id) {
   document.getElementById("nomeUf").value = municipio.nome;
   document.getElementById("estadoUf").value = municipio.estado;
   document.getElementById("caracUf").value = municipio.caracteristica;
-
 }
 
 async function salvarMudanca() {
-    listagem.style.pointerEvents = "auto";
+  listagem.style.pointerEvents = "auto";
   const nome = document.getElementById("nomeUf").value;
   const estado = document.getElementById("estadoUf").value;
   const caracteristica = document.getElementById("caracUf").value;
