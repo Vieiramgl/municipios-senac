@@ -17,27 +17,19 @@ btnCarregar.addEventListener("click", carregarMunicipios);
 btnSalvar.addEventListener("click", inserirMunicipio);
 btnAlterar.addEventListener("click", salvarMudanca);
 
-window.addEventListener("scroll", async () => {
-  let scrollTop = window.pageYOffset;
-
-  if (scrollTop > lastScrollTop) {
-    // Rolou PARA BAIXO
-    offset += 3;
-    carregarMunicipiosMenosMais(offset);
-    console.log(offset);
-  } else {
-    // Rolou PARA CIMA
-    offset -= 3;
-    if (offset < 0) offset = 0; // impede negativo
-    carregarMunicipiosMenosMais(offset);
-    console.log(offset);
-  }
-  lastScrollTop = scrollTop;
+btnMaisMunicipios.addEventListener("click", async () => {
+  offset = offset + 3;
+  carregarMunicipiosMenosMais(offset)
 });
+btnMenosMunicipios.addEventListener("click", async () => {
+  offset = offset - 3;
+  carregarMunicipiosMenosMais(offset);
+})
 fechar.addEventListener("click", () => {
   alterar.style.display = "none";
   listagem.style.pointerEvents = "auto";
 });
+
 
 async function carregarMunicipiosMenosMais(offset) {
   try {
