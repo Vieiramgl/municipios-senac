@@ -31,6 +31,7 @@ fechar.addEventListener("click", () => {
 });
 
 
+
 async function carregarMunicipiosMenosMais(offset) {
   try {
     const resposta = await fetch(`${API}/?limit=${limit}&offset=${offset}`);
