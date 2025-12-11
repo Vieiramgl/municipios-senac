@@ -1,7 +1,13 @@
+
 const API = "http://127.0.0.1:3000/municipios";
+
+const CLIENT_API_KEY = "SUA_CHAVE_SECRETA_MUITO_FORTE_123456";
+
+
 let limit = 3;
 let offset = 0;
-let lastScrollTop = 0;
+
+
 
 const listagem = document.getElementById("listagem");
 const btnCarregar = document.getElementById("btn");
@@ -50,7 +56,11 @@ async function carregarMunicipiosMenosMais(offset) {
 //--------------------------------------------------
 async function carregarMunicipios() {
   try {
-    const resposta = await fetch(`${API}/?limit=${limit}`);
+    const resposta = await fetch(`${API}/?limit=${limit}`, {
+      headers: {
+        "minha-chave": CLIENT_API_KEY
+      }
+    });
     const dados = await resposta.json();
 
     listagem.innerHTML = ""; // limpa
@@ -60,6 +70,8 @@ async function carregarMunicipios() {
     console.error("Erro ao carregar:", erro.message);
   }
 }
+
+
 
 //--------------------------------------------------
 // CRIAR CARD NO FRONT
