@@ -3,6 +3,8 @@ let limit = 3;
 let offset = 0;
 let lastScrollTop = 0;
 
+const API_CLIENT_KEY = "SUA_CHAVE_SECRETA_MUITO_FORTE_123456";
+
 const listagem = document.getElementById("listagem");
 const btnCarregar = document.getElementById("btn");
 const btnSalvar = document.getElementById("btnSalvar");
@@ -17,23 +19,14 @@ btnCarregar.addEventListener("click", carregarMunicipios);
 btnSalvar.addEventListener("click", inserirMunicipio);
 btnAlterar.addEventListener("click", salvarMudanca);
 
-window.addEventListener("scroll", async () => {
-  let scrollTop = window.pageYOffset;
-
-  if (scrollTop > lastScrollTop) {
-    // Rolou PARA BAIXO
-    offset += 3;
-    carregarMunicipiosMenosMais(offset);
-    console.log(offset);
-  } else {
-    // Rolou PARA CIMA
-    offset -= 3;
-    if (offset < 0) offset = 0; // impede negativo
-    carregarMunicipiosMenosMais(offset);
-    console.log(offset);
-  }
-  lastScrollTop = scrollTop;
+btnMaisMunicipios.addEventListener("click", async () => {
+  offset = offset + 3;
+  carregarMunicipiosMenosMais(offset)
 });
+btnMenosMunicipios.addEventListener("click", async () =>{
+  offset = offset -3;
+  carregarMunicipiosMenosMais(offset);
+})
 fechar.addEventListener("click", () => {
   alterar.style.display = "none";
   listagem.style.pointerEvents = "auto";
@@ -42,7 +35,7 @@ fechar.addEventListener("click", () => {
 async function carregarMunicipiosMenosMais(offset) {
   try {
     const resposta = await fetch(`${API}/?limit=${limit}&offset=${offset}`);
-    const dados = await resposta.json();
+    const dados = await resposta.json();  
 
     listagem.innerHTML = ""; // limpa
 
@@ -57,7 +50,11 @@ async function carregarMunicipiosMenosMais(offset) {
 //--------------------------------------------------
 async function carregarMunicipios() {
   try {
-    const resposta = await fetch(`${API}/?limit=${limit}`);
+    const resposta = await fetch(`${API}/?limit=${limit}`, {
+      headers: {
+        "minha-chave": API_CLIENT_KEY
+      }
+    });
     const dados = await resposta.json();
 
     listagem.innerHTML = ""; // limpa
@@ -99,7 +96,7 @@ async function inserirMunicipio() {
   try {
     const resposta = await fetch(API, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "minha-chave": API_CLIENT_KEY},
       body: JSON.stringify(novoMunicipio),
     });
 
@@ -116,7 +113,7 @@ async function inserirMunicipio() {
 async function deletar(id) {
   try {
     const resposta = await fetch(`${API}/${id}`, {
-      method: "DELETE",
+      method: "DELETE", "minha-chave": API_CLIENT_KEY
     });
     carregarMunicipios();
   } catch (err) {
