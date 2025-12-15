@@ -1,32 +1,27 @@
 require("dotenv").config();
-//ler a chave da api
-const API_KEY = process.env.API_KEY_SECRET;
-let limitReq = 0;
-//função que vai fazer a validação da chave da api que está no arquivo .env
-function autenticarApiKey(req, res, next){
-    // variavel da api que vem do front-end
-    const API_KEY_FRONT= req.header('minha-chave');
+
+//ler a chave liberada
+
+const api_key = process.env.API_KEY_SECRET
+
+let contador = 0
+
+function autenticarAPIKey(req, res, next){
+
+    const api_key_front = req.header('minha-chave');
+
+    if(api_key_front === api_key && contador <= 3){
+        console.log("a chave é valida ", api_key_front, ' ', api_key )
+        contador = contador + 1
+        console.log(contador)
+        next()
+
+    }
     
-    if(API_KEY_FRONT === API_KEY && limitReq <=3){
-        //se cair dentro desse if a chave do front é valida
-        console.log("chave é valida", API_KEY_FRONT, API_KEY);
-        //chamar o next quando a chave for valida
-        limitReq = limitReq + 1
-        if(limitReq > 3){
-            return
-        }
-        console.log(limitReq);
-        next();
-    }else{
-        //se cair no else a chave não é valida
-        console.log("chave invalida", API_KEY_FRONT);
-        return res.status(500).json({mensagem: "CHAVE INVALIDA DA API"});
+    else{
+        console.log("a chave é invalida", api_key_front, ' ', api_key )
+        return res.status(500).json({mensagem: "Chave Inválida"})
     }
 }
-function limitarRequest(){
 
-    
-    
-}
-limitarRequest()
-module.exports = autenticarApiKey;
+module.exports = autenticarAPIKey
