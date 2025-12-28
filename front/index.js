@@ -3,7 +3,7 @@ let limit = 3;
 let offset = 0;
 let lastScrollTop = 0;
 
-const API_CLIENT_KEY = "SUA_CHAVE_SECRETA_MUITO_FORTE_123456";
+const API_CLIENT_KEY = "chavinha";
 
 const listagem = document.getElementById("listagem");
 const btnCarregar = document.getElementById("btn");
