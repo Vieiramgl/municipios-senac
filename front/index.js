@@ -1,9 +1,9 @@
 const API = "http://127.0.0.1:3000/municipios";
-let limit = 3;
+let limit = 10;
 let offset = 0;
 let lastScrollTop = 0;
 
-const API_CLIENT_KEY = "chavinha";
+const API_CLIENT_KEY = "SUA_CHAVE_SECRETA_MUITO_FORTE_123456";
 
 const listagem = document.getElementById("listagem");
 const btnCarregar = document.getElementById("btn");
