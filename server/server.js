@@ -1,6 +1,5 @@
 const express = require("express");
 require("dotenv").config();
-const aotenticarApiKey = require("./autorizar")
 const cors = require('cors');
 
 const municipiosRouter = require("./routes/municipios");
@@ -30,4 +29,4 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log("✅ Servidor rodando");
-});
+}); 

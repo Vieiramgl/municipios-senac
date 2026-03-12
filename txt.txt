@@ -1,0 +1,232 @@
+-- =========================================================
+-- TATAME - BANCO DE DADOS (PostgreSQL)
+-- Versão: simples + Foreign Keys
+-- - IDs: SERIAL
+-- - Com FK para integridade
+-- - Sem ENUM / CHECK / TRIGGER (regras no código)
+-- =========================================================
+
+-- =========================
+-- RESET (opcional) - apaga tudo e recria
+-- =========================
+DROP TABLE IF EXISTS eventos_participantes;
+DROP TABLE IF EXISTS eventos;
+
+DROP TABLE IF EXISTS videos_treino_tecnica;
+DROP TABLE IF EXISTS videos_tecnica;
+
+DROP TABLE IF EXISTS treinos_tecnicas;
+DROP TABLE IF EXISTS tecnicas;
+DROP TABLE IF EXISTS treinos;
+
+DROP TABLE IF EXISTS feed_atividades;
+DROP TABLE IF EXISTS usuarios_modalidades;
+DROP TABLE IF EXISTS conexoes;
+
+DROP TABLE IF EXISTS usuarios;
+
+-- =========================
+-- 1) USUÁRIOS
+-- - email e username únicos
+-- - faixa/grau etc ficam como texto/número (validar no código)
+-- =========================
+CREATE TABLE usuarios (
+  id SERIAL PRIMARY KEY,
+
+  nome VARCHAR(120) NOT NULL,
+  username VARCHAR(60) NOT NULL UNIQUE,
+  email VARCHAR(160) NOT NULL UNIQUE,
+
+  senha_hash TEXT,          -- por enquanto pode ficar null (sem autenticação)
+  foto_url TEXT,
+
+  faixa VARCHAR(30),        -- ex: "branca", "azul", "roxa", "marrom", "preta"
+  grau INTEGER,             -- ex: 0..4 (validar no código)
+
+  peso_kg NUMERIC(5,2),     -- ex: 82.50
+  altura_cm INTEGER,        -- ex: 178
+  data_nascimento DATE,
+
+  academia VARCHAR(160),
+  cidade VARCHAR(120),
+  bio TEXT,
+  privado BOOLEAN DEFAULT FALSE,
+
+  criado_em TIMESTAMP DEFAULT NOW(),
+  atualizado_em TIMESTAMP
+);
+
+-- =========================
+-- 2) MODALIDADES DO USUÁRIO (perfil)
+-- - uma linha por modalidade
+-- - exemplo modalidade: "bjj_gi", "bjj_no_gi", "luta_livre", "wrestling", "outro"
+-- =========================
+CREATE TABLE usuarios_modalidades (
+  id SERIAL PRIMARY KEY,
+  usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  modalidade VARCHAR(40) NOT NULL,
+  criado_em TIMESTAMP DEFAULT NOW()
+);
+
+-- =========================
+-- 3) CONEXÕES (amigos / parceiros)
+-- - status no código: "pendente", "aceito", "recusado", "bloqueado", etc.
+-- =========================
+CREATE TABLE conexoes (
+  id SERIAL PRIMARY KEY,
+  usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  usuario_conectado_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  status VARCHAR(30),
+  criado_em TIMESTAMP DEFAULT NOW()
+);
+
+-- =========================
+-- 4) TREINOS
+-- - duração em segundos (cronômetro)
+-- =========================
+CREATE TABLE treinos (
+  id SERIAL PRIMARY KEY,
+  usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+
+  data_treino DATE,
+  modalidade VARCHAR(40),
+  local VARCHAR(200),
+
+  duracao_segundos INTEGER,
+  observacoes TEXT,
+
+  criado_em TIMESTAMP DEFAULT NOW(),
+  atualizado_em TIMESTAMP
+);
+
+-- =========================
+-- 5) TÉCNICAS (biblioteca individual)
+-- - técnica pertence ao usuário
+-- - pode existir sem treino
+-- - tem observação geral
+-- - pode ter 1 vídeo principal
+-- =========================
+CREATE TABLE tecnicas (
+  id SERIAL PRIMARY KEY,
+  usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+
+  nome VARCHAR(200) NOT NULL,
+  observacoes_gerais TEXT,
+
+  -- vídeo principal (geral da técnica)
+  video_principal_link TEXT,          -- youtube/instagram/etc
+  video_principal_url TEXT,           -- arquivo (storage)
+  video_principal_nome_arquivo TEXT,
+  video_principal_tamanho_bytes BIGINT,
+  video_principal_duracao_segundos INTEGER,
+
+  criado_em TIMESTAMP DEFAULT NOW(),
+  atualizado_em TIMESTAMP
+);
+
+-- =========================
+-- 6) TREINO ↔ TÉCNICA (associação)
+-- - categoria/tipo/observação são do treino
+-- - ao deletar treino: apaga os vínculos (CASCADE)
+-- - ao deletar técnica: apaga os vínculos (CASCADE)
+-- Obs: "mesma técnica não repete no mesmo treino" -> validar no código
+-- =========================
+CREATE TABLE treinos_tecnicas (
+  id SERIAL PRIMARY KEY,
+
+  treino_id INTEGER NOT NULL REFERENCES treinos(id) ON DELETE CASCADE,
+  tecnica_id INTEGER NOT NULL REFERENCES tecnicas(id) ON DELETE CASCADE,
+
+  categoria VARCHAR(40),        -- "guarda", "passagem", "finalizacao", etc
+  tipo VARCHAR(40),             -- "drilling", "rola", "tecnica"
+  observacoes_do_treino TEXT,
+
+  criado_em TIMESTAMP DEFAULT NOW()
+);
+
+-- =========================
+-- 7) VÍDEOS EXTRAS DA TÉCNICA (opcional / futuro)
+-- - além do vídeo principal
+-- - ao deletar técnica: apaga vídeos dela (CASCADE)
+-- =========================
+CREATE TABLE videos_tecnica (
+  id SERIAL PRIMARY KEY,
+  tecnica_id INTEGER NOT NULL REFERENCES tecnicas(id) ON DELETE CASCADE,
+
+  titulo VARCHAR(160),
+  link TEXT,                    -- externo
+  url TEXT,                     -- arquivo (storage)
+  nome_arquivo TEXT,
+  tamanho_bytes BIGINT,
+  duracao_segundos INTEGER,
+
+  criado_em TIMESTAMP DEFAULT NOW()
+);
+
+-- =========================
+-- 8) VÍDEOS ESPECÍFICOS (TREINO + TÉCNICA) (opcional / futuro)
+-- - vídeos daquela execução no treino
+-- - ao deletar vínculo treinos_tecnicas: apaga vídeos (CASCADE)
+-- =========================
+CREATE TABLE videos_treino_tecnica (
+  id SERIAL PRIMARY KEY,
+  treino_tecnica_id INTEGER NOT NULL REFERENCES treinos_tecnicas(id) ON DELETE CASCADE,
+
+  titulo VARCHAR(160),
+  link TEXT,
+  url TEXT,
+  nome_arquivo TEXT,
+  tamanho_bytes BIGINT,
+  duracao_segundos INTEGER,
+
+  criado_em TIMESTAMP DEFAULT NOW()
+);
+
+-- =========================
+-- 9) FEED (opcional)
+-- - pode ignorar no MVP e gerar via SELECT
+-- =========================
+CREATE TABLE feed_atividades (
+  id SERIAL PRIMARY KEY,
+  usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+
+  tipo VARCHAR(60),              -- "treino_criado", "evento_criado", etc
+  descricao TEXT,
+  referencia_tipo VARCHAR(40),   -- "treino", "evento", "tecnica"
+  referencia_id INTEGER,
+
+  criado_em TIMESTAMP DEFAULT NOW()
+);
+
+-- =========================
+-- 10) EVENTOS
+-- =========================
+CREATE TABLE eventos (
+  id SERIAL PRIMARY KEY,
+  criador_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+
+  titulo VARCHAR(160),
+  data_evento DATE,
+  horario TIME,
+  duracao_minutos INTEGER,
+
+  modalidade VARCHAR(40),
+  local VARCHAR(200),
+  descricao TEXT,
+
+  criado_em TIMESTAMP DEFAULT NOW()
+);
+
+-- =========================
+-- 11) PARTICIPANTES DO EVENTO
+-- - status no código: "pendente", "aceito", "recusado", "cancelado"
+-- - ao deletar evento: apaga participantes (CASCADE)
+-- =========================
+CREATE TABLE eventos_participantes (
+  id SERIAL PRIMARY KEY,
+  evento_id INTEGER NOT NULL REFERENCES eventos(id) ON DELETE CASCADE,
+  usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+
+  status VARCHAR(30),
+  criado_em TIMESTAMP DEFAULT NOW()
+);

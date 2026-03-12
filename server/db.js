@@ -28,4 +28,4 @@ console.log("🔥 DB CONFIG:1", {
 });
 
 
-module.exports = pool;
+module.exports = pool; 
